@@ -1,0 +1,24 @@
+[package]
+name = "tw2_community_patch"
+version = "1.0.0"
+edition = "2021"
+
+[[bin]]
+name = "TW2_Community_Patch"
+path = "src/main.rs"
+
+[dependencies]
+tao = "=0.30.8"
+wry = "=0.47.2"
+rfd = "0.15"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+winreg = "0.52"
+windows-sys = { version = "0.59", features = ["Win32_Graphics_Gdi", "Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
+
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true
+panic = "abort"

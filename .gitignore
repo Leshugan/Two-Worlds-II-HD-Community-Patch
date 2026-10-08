@@ -1,0 +1,4 @@
+/target/
+/Claude outputs/
+*.exe
+!/wv2/*.exe

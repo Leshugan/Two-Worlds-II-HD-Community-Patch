@@ -1,0 +1,129 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><style>
+*{box-sizing:border-box} body{margin:0;background:#0d0b08;font-family:"Segoe UI",Inter,sans-serif;color:#e6dccb;font-size:14px}
+.win{width:1180px;margin:0 auto;background:radial-gradient(ellipse at 50% -10%,#2a2116 0%,#16120d 45%,#110e0a 100%);border:1px solid #5a4626}
+.head{padding:24px 28px 12px;text-align:center;border-bottom:1px solid #3d301b;margin:0 28px}
+.head h1{margin:0;font-family:"Bitstream Charter",Caladea,Georgia,serif;font-size:34px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+ background:linear-gradient(180deg,#fff3c8 0%,#e8c46a 45%,#a8792c 100%);-webkit-background-clip:text;color:transparent;text-shadow:0 0 1px rgba(0,0,0,.3)}
+.head .sub{color:#a8977a;margin-top:6px;letter-spacing:.5px}
+.path,.card,.note{background:linear-gradient(180deg,rgba(40,32,22,.85),rgba(25,20,14,.85));border:1px solid #4e3d22;border-radius:6px;box-shadow:inset 0 1px 0 rgba(255,220,150,.06)}
+.path{margin:14px 28px 6px;padding:14px 16px}
+.note{margin:14px 28px 0;padding:12px 16px;color:#cdbf9f;font-size:13px;line-height:1.5}.note b{color:#f0d48a}
+.row{display:flex;gap:10px;align-items:center}
+.input{flex:1;background:#0e0b08;border:1px solid #5a4626;border-radius:4px;padding:8px 10px;color:#efe4cf;font-size:13px}
+.btn{background:linear-gradient(180deg,#3a2e1c,#261e13);border:1px solid #7a5f30;border-radius:4px;padding:8px 16px;color:#ecd9a8}
+.hint{color:#a8977a;font-size:12.5px;margin-top:8px}.hint b{color:#e8cf8e}
+.ok{color:#a9c46a;font-size:12.5px;margin-top:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px 28px}
+.card{padding:14px 16px}
+.card h2{margin:0 0 10px;font-family:"Bitstream Charter",Caladea,Georgia,serif;font-size:17px;font-weight:700;color:#e8c46a;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #4e3d22;padding-bottom:8px}
+.opt{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-top:1px solid rgba(120,95,50,.25)}
+.card h2+.opt{border-top:none}
+.cb{width:18px;height:18px;border-radius:3px;flex:none;margin-top:1px;border:1px solid #7a5f30;background:#0e0b08}
+.cb.on{background:linear-gradient(180deg,#f2d27e,#b8862e);border-color:#d8b05a;position:relative}
+.cb.on:after{content:"";position:absolute;left:5px;top:1px;width:5px;height:10px;border:solid #1a1208;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.lbl{flex:1;color:#efe4cf} .lbl .d{color:#a8977a;font-size:12.5px;margin-top:2px}
+.sel{background:#0e0b08;border:1px solid #5a4626;border-radius:4px;padding:5px 26px 5px 9px;font-size:13px;color:#efe4cf;position:relative;white-space:nowrap}
+.key{background:#0e0b08;border:1px solid #7a5f30;border-radius:4px;padding:5px 10px;font-size:13px;min-width:70px;text-align:center;color:#f0d48a}
+.warn{margin:6px 28px 0;background:linear-gradient(180deg,rgba(70,40,18,.6),rgba(45,25,12,.6));border:1px solid #8a5a24;border-radius:6px;padding:12px 16px;color:#ead8b8;font-size:13px;line-height:1.5}
+.warn b{color:#ffcf6e}
+.foot{display:flex;align-items:center;gap:12px;padding:16px 28px 22px}
+.foot .ver{color:#8a7a5c;font-size:12px;margin-right:auto}
+.primary{background:linear-gradient(180deg,#f2d27e,#c08f36 60%,#94671f);border:1px solid #f0d48a;border-radius:4px;padding:9px 30px;color:#1a1208;font-weight:700;letter-spacing:.5px;box-shadow:0 0 12px rgba(232,196,106,.25)}
+html,body{height:100%} body{overflow-y:auto} .win{width:auto;min-height:100%;border:none}
+.soon{color:#8a7a5c;font-size:11.5px;border:1px solid #5a4626;border-radius:3px;padding:0 5px;margin-left:6px;vertical-align:1px}
+.opt.dis .lbl{opacity:.5} .opt.dis .cb{opacity:.4}
+.cb{cursor:pointer} .key{cursor:pointer} .key.wait{border-color:#f0d48a;color:#fff}
+select.sel{appearance:none;-webkit-appearance:none;cursor:pointer;font-family:inherit}
+select option{background:#1a140d;color:#efe4cf}
+.selw{position:relative} .selw:after{content:"▾";position:absolute;right:8px;top:5px;color:#c9a24a;pointer-events:none}
+.btn,.primary{cursor:pointer;user-select:none} .btn:hover{border-color:#c9a24a} .primary:hover{filter:brightness(1.08)}
+.primary.off,.btn.off{opacity:.45;pointer-events:none}
+.err{color:#e07a5f;font-size:12.5px;margin-top:6px}
+#overlay{position:fixed;inset:0;background:rgba(8,6,4,.82);display:none;align-items:center;justify-content:center;z-index:9}
+#overlay .box{width:720px;max-height:80%;display:flex;flex-direction:column;background:linear-gradient(180deg,#2a2116,#16120d);border:1px solid #7a5f30;border-radius:8px;padding:18px 20px}
+#overlay h3{margin:0 0 10px;font-family:"Bitstream Charter",Caladea,Georgia,serif;color:#e8c46a;letter-spacing:1px;text-transform:uppercase}
+#log{flex:1;overflow:auto;background:#0e0b08;border:1px solid #4e3d22;border-radius:4px;padding:10px;font-size:12.5px;line-height:1.55;white-space:pre-wrap;color:#d8ccb4;min-height:200px}
+#log .ok{color:#a9c46a;margin:0} #log .bad{color:#e07a5f} #log .skip{color:#c9a24a}
+#overlay .row{justify-content:flex-end;margin-top:12px}
+a{color:#e8c46a;cursor:pointer}
+</style></head><body><div class="win">
+<div class="head"><h1>Two Worlds II HD Community Patch</h1><div class="sub">Неофициальный патч: исправления, управление, графика и удобства</div></div>
+<div class="note"><b>Неофициальный патч.</b> Он создан энтузиастом и не связан с разработчиками и издателями игры. Патч проверялся только на компьютере автора с Windows 11 26H2. На других компьютерах, системах и версиях игры он должен работать, но может вести себя иначе. Гарантий безупречной работы нет — устанавливая патч, вы делаете это на свой страх и риск.</div>
+<div class="path"><div style="font-weight:600;margin-bottom:8px">Папка игры</div>
+<div class="row"><div class="selw" style="flex:1"><select id="path" class="input sel" style="width:100%;padding:8px 30px 8px 10px"><option value="">Поиск игры…</option></select></div><div class="btn" id="browse">Обзор…</div></div>
+<div class="hint">Укажите папку, в которой находятся файлы игры <b>TwoWorlds2.exe</b> и/или <b>TwoWorlds2_DX10.exe</b> (обычно это корневая папка игры). Найденные копии игры есть в списке; если их несколько или нужной там нет, выберите вручную.</div>
+<div id="check" class="hint"></div></div>
+<div class="grid">
+<div class="card"><h2>Управление</h2>
+<div class="opt" data-o="sprint"><div class="cb on"></div><div class="lbl">Спринт на отдельной клавише<div class="d">Удерживать или переключать; любое действие мышью сразу его прерывает</div></div><div class="key" data-k="sprint_key" data-vk="16">Shift</div><div class="selw"><select class="sel" id="sprint_mode"><option value="1">Удерживать</option><option value="2">Переключать</option></select></div></div>
+<div class="opt" data-o="sneak"><div class="cb on"></div><div class="lbl">Красться на отдельной клавише<div class="d">Удерживать или переключать</div></div><div class="key" data-k="sneak_key" data-vk="67">C</div><div class="selw"><select class="sel" id="sneak_mode"><option value="1">Удерживать</option><option value="2" selected>Переключать</option></select></div></div>
+<div class="opt" data-o="quickload"><div class="cb on"></div><div class="lbl">Кнопка быстрой загрузки<div class="d">В игре её нет: одно нажатие загружает последнее быстрое сохранение</div></div><div class="key" data-k="quickload_key" data-vk="117">F6</div></div>
+<div class="opt" data-o="block"><div class="cb on"></div><div class="lbl">Мгновенный блок на ходу и в спринте<div class="d">Исправляет неудобство управления старой игры: блок с оружием ставится сразу, без остановки персонажа</div></div></div>
+<div class="opt" data-o="camera"><div class="cb on"></div><div class="lbl">Плавная камера без рывков мыши</div></div>
+</div>
+<div class="card"><h2>Графика</h2>
+<div class="opt" data-o="dxvk"><div class="cb on"></div><div class="lbl">DXVK — главная оптимизация <span style="color:#e8c46a;font-size:12.5px">★ рекомендуется</span><div class="d">Основа патча: заметно больше кадров и максимальная плавность. Если игра не запускается — отключите эту опцию.</div></div></div>
+<div class="opt" data-o="draw"><div class="cb on"></div><div class="lbl">Дальность прорисовки</div><div class="selw"><select class="sel" id="draw_level"><option value="10">Максимальная</option><option value="7">Высокая</option><option value="5">Средняя</option></select></div></div>
+<div class="opt" data-o="shadows"><div class="cb on"></div><div class="lbl">Тени дальше от героя<div class="d">Тени рисуются на большем расстоянии и не «появляются» перед носом</div></div><div class="selw"><select class="sel" id="shadow_level"><option value="2">Максимальные</option><option value="1">Высокие</option></select></div></div>
+<div class="opt" data-o="grass"><div class="cb on"></div><div class="lbl">Трава дальше<div class="d">Меньше «лысой» земли вдали</div></div><div class="selw"><select class="sel" id="grass_level"><option value="3">Экстремальная</option><option value="2" selected>Максимальная</option><option value="1">Высокая</option></select></div></div>
+<div class="opt" data-o="fov"><div class="cb on"></div><div class="lbl">Угол обзора<div class="d" id="fov_d">Подбирается под ваш экран. Можно выбрать свой</div></div><div class="selw"><select class="sel" id="fov_val"><option value="0">Рекомендуемый</option><option value="50">50°</option><option value="55">55°</option><option value="60">60°</option><option value="65">65°</option><option value="70">70°</option><option value="75">75°</option></select></div></div>
+<div class="opt" data-o="lodtrees"><div class="cb on"></div><div class="lbl">Исправленные лоды объектов<div class="d">Деревья и зелень вдали в цвет настоящих, без салатовых пятен</div></div></div>
+<div class="opt" data-o="horizon"><div class="cb on"></div><div class="lbl">Исправление прорисовки дальних гор и берега</div></div>
+<div class="opt" data-o="noblur"><div class="cb on"></div><div class="lbl">Без размытия вдали и при движении</div></div>
+</div>
+<div class="card"><h2>Интерфейс</h2>
+<div class="opt" data-o="saves"><div class="cb on"></div><div class="lbl">Удобный список сохранений<div class="d">Быстрое → ручные → авто; место и дата; мелкий шрифт</div></div></div>
+<div class="opt" data-o="instant"><div class="cb on"></div><div class="lbl">Мгновенное открытие окон<div class="d">Инвентарь и окна персонажа открываются и закрываются сразу — камера не облетает героя</div></div></div>
+<div class="opt" data-o="wpnfast"><div class="cb"></div><div class="lbl">Ускоренное извлечение оружия<div class="d">Оружие достаётся и убирается быстрее</div></div></div>
+<div class="opt" data-o="noloot"><div class="cb"></div><div class="lbl">Отключить анимацию обыска тел</div></div>
+<div class="opt" data-o="intro"><div class="cb on"></div><div class="lbl">Сюжетный вступительный ролик<div class="d">Если отключить — игра запускается сразу в меню. Заставки с логотипами убираются в любом случае</div></div></div>
+</div>
+<div class="card"><h2>Система и исправления</h2>
+<div class="opt" data-o="borderless"><div class="cb on"></div><div class="lbl">Окно без рамки и корректное сворачивание<div class="d">Alt+Tab, клики после возврата в игру</div></div></div>
+<div class="opt" data-o="laa"><div class="cb on"></div><div class="lbl">Больше памяти для игры (защита от вылетов)</div></div>
+<div class="opt" data-o="voices"><div class="cb on"></div><div class="lbl">Убрать английскую речь из русской озвучки<div class="d">Если вы ставили русскую озвучку (русификатор), но часть персонажей всё равно говорит по-английски. Без русской озвучки опция недоступна</div></div></div>
+<div class="opt" data-o="steamblock"><div class="cb on"></div><div class="lbl">Запретить Steam обновлять игру<div class="d">Только для версии Steam</div></div></div>
+</div>
+</div>
+<div class="warn"><b>Перед установкой создаётся резервная копия.</b> Все файлы игры, которые изменит патч, будут сохранены. Патч можно удалить в любой момент, и игра вернётся к состоянию на момент установки.<br><b>Важно:</b> восстановление гарантировано, только если после установки патча вы не меняли файлы игры сами — не ставили другие моды, не заменяли файлы, не обновляли игру. Если вы что-то меняли, удаление патча может пройти некорректно или окажется невозможным.<br>Чтобы обновление Steam не сломало патч, включите «Запретить Steam обновлять игру». Не запускайте «Проверку целостности файлов» в Steam — она вернёт оригинальные файлы и удалит патч.</div>
+<div class="foot"><span class="ver">Версия 1.0 · для игры версии 2.08 · автор <a id="author" style="text-decoration:underline">Leshugan</a> · резервная копия: _CommunityPatch_Backup</span><div class="btn off" id="uninstall">Удалить патч</div><div class="primary off" id="install">Установить</div></div>
+</div>
+<div id="overlay"><div class="box"><h3 id="ovt">Установка</h3><div id="log"></div><div class="row"><div class="primary off" id="close">Готово</div></div></div></div>
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const send=o=>window.ipc.postMessage(JSON.stringify(o));
+let state={ok:false,installed:false};
+$$('.opt').forEach(o=>{ const cb=o.querySelector('.cb'); cb.onclick=()=>{ if(o.classList.contains('dis'))return; cb.classList.toggle('on'); }; });
+let waitKey=null;
+$$('.key').forEach(k=>k.onclick=()=>{ if(waitKey) waitKey.classList.remove('wait'); waitKey=k; k.dataset.old=k.textContent; k.textContent='Нажмите…'; k.classList.add('wait'); });
+document.addEventListener('keydown',e=>{ if(!waitKey) return; e.preventDefault();
+  if(e.keyCode===27){ waitKey.textContent=waitKey.dataset.old; } else {
+    let n=e.key.length===1?e.key.toUpperCase():e.key; if(e.keyCode===16)n='Shift'; if(e.keyCode===17)n='Ctrl'; if(e.keyCode===18)n='Alt'; if(e.keyCode===32)n='Пробел';
+    waitKey.textContent=n; waitKey.dataset.vk=e.keyCode; }
+  waitKey.classList.remove('wait'); waitKey=null; });
+$('#browse').onclick=()=>send({cmd:'browse'});
+$('#path').onchange=()=>send({cmd:'check',path:$('#path').value});
+$('#author').onclick=()=>send({cmd:'link'});
+function opts(){ const o={}; $$('.opt').forEach(e=>{ o[e.dataset.o]=e.querySelector('.cb').classList.contains('on')&&!e.classList.contains('dis'); });
+  $$('.key').forEach(k=>o[k.dataset.k]=+k.dataset.vk); o.sprint_mode=+$('#sprint_mode').value; o.sneak_mode=+$('#sneak_mode').value; o.draw_level=+$('#draw_level').value; o.shadow_level=+$('#shadow_level').value; o.grass_level=+$('#grass_level').value; o.fov_val=+$('#fov_val').value||fovRec; return o; }
+let fovRec=60;
+$('#install').onclick=()=>{ showOv('Установка'); send({cmd:'install',path:$('#path').value,opts:opts()}); };
+$('#uninstall').onclick=()=>{ showOv('Удаление патча'); send({cmd:'uninstall',path:$('#path').value}); };
+$('#close').onclick=()=>{ $('#overlay').style.display='none'; send({cmd:'check',path:$('#path').value}); };
+function showOv(t){ $('#ovt').textContent=t; $('#log').innerHTML=''; $('#close').classList.add('off'); $('#overlay').style.display='flex'; }
+window.onLog=(t,c)=>{ const d=document.createElement('div'); if(c)d.className=c; d.textContent=t; $('#log').appendChild(d); $('#log').scrollTop=1e9; };
+window.onDone=()=>{ $('#close').classList.remove('off'); };
+window.onInit=r=>{ const s=$('#path'); s.innerHTML=''; if(!r.installs.length){ const o=new Option('Игра не найдена — нажмите «Обзор…»',''); s.add(o); }
+  r.installs.forEach(i=>s.add(new Option(i.path+'   — '+i.label,i.path)));
+  if(r.fov){ fovRec=r.fov; $('#fov_val').options[0].text='Рекомендуемый ('+r.fov+'°)'; $('#fov_d').textContent='Подобран под ваш экран ('+r.screen+'). Можно выбрать свой'; }
+  if(r.installs.length) send({cmd:'check',path:r.installs[0].path}); else onCheck({ok:false,msg:''}); };
+window.onPath=p=>{ const s=$('#path'); let f=[...s.options].find(o=>o.value===p); if(!f){ if(s.options.length&&!s.options[0].value) s.innerHTML=''; f=new Option(p+'   — выбрано вручную',p); s.add(f);} s.value=p; send({cmd:'check',path:p}); };
+window.onCheck=r=>{ state=r; const c=$('#check'); c.className=r.ok?'ok':(r.msg?'err':'hint'); c.textContent=(r.ok?'✓ ':(r.msg?'✗ ':''))+r.msg;
+  $('#install').classList.toggle('off',!r.ok); $('#uninstall').classList.toggle('off',!r.installed);
+  $('#install').textContent=r.installed?'Переустановить':'Установить';
+  const set=(n,av,why)=>{ const e=$('[data-o='+n+']'); if(!e||e.dataset.soon)return; e.classList.toggle('dis',!av);
+    let t=e.querySelector('.na'); if(t)t.remove(); if(!av&&why){ t=document.createElement('span'); t.className='soon na'; t.textContent=why; e.querySelector('.lbl').insertBefore(t,e.querySelector('.lbl .d')); } };
+  $$('.opt').forEach(e=>{ if(!e.dataset.soon) set(e.dataset.o,true); });
+  set('steamblock',r.steam); set('voices',r.voices); set('intro',r.intro,'в игре нет файлов заставок'); (r.na||[]).forEach(n=>set(n,false,'недоступно для вашей версии')); };
+send({cmd:'init'});
+</script></body></html>
