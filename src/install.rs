@@ -213,7 +213,7 @@ pub fn uninstall(game: &Path, log: Log) -> Result<(), String> {
 
 // ------------------------------------------------------------------ check
 fn all_opts() -> BinOpts {
-    BinOpts { input: true, saves: true, quickload: true, noblur: true, borderless: true, laa: true, instant: true, far_draw: true, far_grass: true, wpnfast: true, sprint_mode: 1, sneak_mode: 2, sprint_vk: 0x10, sneak_vk: 0x43, ql_vk: 0x75 }
+    BinOpts { input: true, sprint: true, sneak: true, block: true, saves: true, quickload: true, noblur: true, borderless: true, laa: true, instant: true, far_draw: true, far_grass: true, wpnfast: true, sprint_mode: 1, sneak_mode: 2, sprint_vk: 0x10, sneak_vk: 0x43, ql_vk: 0x75 }
 }
 const BIN_FEATS: [&str; 8] = ["sprint", "sneak", "block", "quickload", "saves", "noblur", "borderless", "instant"];
 
@@ -246,7 +246,8 @@ pub fn check(game: &Path) -> Value {
     let mut msg = format!("Игра найдена{}: {}", ver.as_ref().map(|v| format!(" (версия {v})")).unwrap_or_default(), names.join(", "));
     if let Some(v) = &ver { if v != "2.08" { msg += ". Патч делался под версию 2.08 — на другой версии часть функций может не работать"; } }
     if foreign { msg += ". Внимание: файлы игры уже изменены другим патчем — часть функций недоступна"; }
-    json!({"ok": true, "msg": msg, "installed": is_installed(game), "steam": acf_path(game).is_some(), "voices": rus_voice(game), "intro": !intro_files(game).is_empty() || is_installed(game), "na": na})
+    let opts = fs::read(game.join(BACKUP).join("options.json")).ok().and_then(|d| serde_json::from_slice::<Value>(&d).ok()).unwrap_or(Value::Null);
+    json!({"ok": true, "msg": msg, "installed": is_installed(game), "opts": opts, "steam": acf_path(game).is_some(), "voices": rus_voice(game), "intro": !intro_files(game).is_empty() || is_installed(game), "na": na})
 }
 
 // ------------------------------------------------------------------ install
@@ -270,10 +271,12 @@ pub fn install(game: &Path, o: &Opts, log: Log) -> Result<(), String> {
     // executables
     let bo = BinOpts {
         input: o.on("sprint") || o.on("sneak") || o.on("block") || o.on("quickload"),
+        sprint: o.on("sprint"), sneak: o.on("sneak"), block: o.on("block"),
         saves: o.on("saves"), quickload: o.on("quickload"), noblur: o.on("noblur"), borderless: o.on("borderless"), laa: o.on("laa"), instant: o.on("instant"),
         far_draw: false, far_grass: o.on("grass") && o.num("grass_level", 2) >= 3, wpnfast: o.on("wpnfast"),
         sprint_mode: o.num("sprint_mode", 1) as u8, sneak_mode: o.num("sneak_mode", 2) as u8,
-        sprint_vk: o.num("sprint_key", 0x10) as u8, sneak_vk: o.num("sneak_key", 0x43) as u8,
+        sprint_vk: if o.on("sprint") { o.num("sprint_key", 0x10) as u8 } else { 0 },
+        sneak_vk: if o.on("sneak") { o.num("sneak_key", 0x43) as u8 } else { 0 },
         ql_vk: if o.on("quickload") { o.num("quickload_key", 0x75) as u8 } else { 0 },
     };
     for (e, kind) in EXES {
@@ -393,6 +396,8 @@ pub fn install(game: &Path, o: &Opts, log: Log) -> Result<(), String> {
             log("Steam: автообновление игры отключено", "ok");
         } else { log("Steam: не версия Steam — пропущено", "skip"); }
     }
+    // remember the chosen options: the window shows them again next time
+    let _ = fs::write(game.join(BACKUP).join("options.json"), serde_json::to_vec(&o.v).unwrap_or_default());
     Ok(())
 }
 

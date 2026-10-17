@@ -105,7 +105,13 @@ $('#browse').onclick=()=>send({cmd:'browse'});
 $('#path').onchange=()=>send({cmd:'check',path:$('#path').value});
 $('#author').onclick=()=>send({cmd:'link'});
 function opts(){ const o={}; $$('.opt').forEach(e=>{ o[e.dataset.o]=e.querySelector('.cb').classList.contains('on')&&!e.classList.contains('dis'); });
-  $$('.key').forEach(k=>o[k.dataset.k]=+k.dataset.vk); o.sprint_mode=+$('#sprint_mode').value; o.sneak_mode=+$('#sneak_mode').value; o.draw_level=+$('#draw_level').value; o.shadow_level=+$('#shadow_level').value; o.grass_level=+$('#grass_level').value; o.fov_val=+$('#fov_val').value||fovRec; return o; }
+  $$('.key').forEach(k=>o[k.dataset.k]=+k.dataset.vk); o.sprint_mode=+$('#sprint_mode').value; o.sneak_mode=+$('#sneak_mode').value; o.draw_level=+$('#draw_level').value; o.shadow_level=+$('#shadow_level').value; o.grass_level=+$('#grass_level').value; o.fov_val=+$('#fov_val').value||fovRec;
+  o._sel={}; $$('select.sel').forEach(s=>{ if(s.id&&s.id!=='path') o._sel[s.id]=s.value; }); o._keys={}; $$('.key').forEach(k=>o._keys[k.dataset.k]={vk:+k.dataset.vk,name:k.textContent}); return o; }
+// options of the installed patch are shown again when the window opens
+function applyOpts(v){ if(!v||typeof v!=='object')return;
+  $$('.opt').forEach(e=>{ if(e.dataset.o in v) e.querySelector('.cb').classList.toggle('on',!!v[e.dataset.o]); });
+  Object.entries(v._sel||{}).forEach(([id,val])=>{ const s=document.getElementById(id); if(s&&[...s.options].some(x=>x.value===val)) s.value=val; });
+  Object.entries(v._keys||{}).forEach(([k,o])=>{ const e=$('.key[data-k='+k+']'); if(e&&o&&o.vk){ e.dataset.vk=o.vk; e.textContent=o.name; } }); }
 let fovRec=60;
 $('#install').onclick=()=>{ showOv('Установка'); send({cmd:'install',path:$('#path').value,opts:opts()}); };
 $('#uninstall').onclick=()=>{ showOv('Удаление патча'); send({cmd:'uninstall',path:$('#path').value}); };
@@ -118,7 +124,7 @@ window.onInit=r=>{ const s=$('#path'); s.innerHTML=''; if(!r.installs.length){ c
   if(r.fov){ fovRec=r.fov; $('#fov_val').options[0].text='Рекомендуемый ('+r.fov+'°)'; $('#fov_d').textContent='Подобран под ваш экран ('+r.screen+'). Можно выбрать свой'; }
   if(r.installs.length) send({cmd:'check',path:r.installs[0].path}); else onCheck({ok:false,msg:''}); };
 window.onPath=p=>{ const s=$('#path'); let f=[...s.options].find(o=>o.value===p); if(!f){ if(s.options.length&&!s.options[0].value) s.innerHTML=''; f=new Option(p+'   — выбрано вручную',p); s.add(f);} s.value=p; send({cmd:'check',path:p}); };
-window.onCheck=r=>{ state=r; const c=$('#check'); c.className=r.ok?'ok':(r.msg?'err':'hint'); c.textContent=(r.ok?'✓ ':(r.msg?'✗ ':''))+r.msg;
+window.onCheck=r=>{ state=r; if(r.installed) applyOpts(r.opts); const c=$('#check'); c.className=r.ok?'ok':(r.msg?'err':'hint'); c.textContent=(r.ok?'✓ ':(r.msg?'✗ ':''))+r.msg;
   $('#install').classList.toggle('off',!r.ok); $('#uninstall').classList.toggle('off',!r.installed);
   $('#install').textContent=r.installed?'Переустановить':'Установить';
   const set=(n,av,why)=>{ const e=$('[data-o='+n+']'); if(!e||e.dataset.soon)return; e.classList.toggle('dis',!av);

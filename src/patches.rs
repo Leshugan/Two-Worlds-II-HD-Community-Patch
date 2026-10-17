@@ -4,7 +4,7 @@ use crate::pe::*;
 
 #[derive(Clone, Default)]
 pub struct BinOpts {
-    pub input: bool, pub saves: bool, pub quickload: bool,
+    pub input: bool, pub sprint: bool, pub sneak: bool, pub block: bool, pub saves: bool, pub quickload: bool,
     pub noblur: bool, pub borderless: bool, pub laa: bool, pub instant: bool,
     pub far_draw: bool, pub far_grass: bool, pub wpnfast: bool,
     pub sprint_mode: u8, pub sneak_mode: u8, pub sprint_vk: u8, pub sneak_vk: u8, pub ql_vk: u8,
@@ -578,21 +578,27 @@ fn input(d: &mut Vec<u8>, secva: u32, secraw: usize, tick: Option<u32>, o: &BinO
     c2.e(&[b"\x83\x7c\x24\x04\x01"]); c2.jn(b"\x0f\x85", "o");
     c2.e(&[b"\x8b\x44\x24\x08\x83\xf8\x05"]); c2.jn(b"\x0f\x84", "o");
     // sneaking with a weapon in hand breaks putting it away: ignore sneak then
-    c2.e(&[b"\x83\xf8\x2e"]); c2.j(b"\x74", "snk");
-    c2.e(&[b"\x83\xf8\x4e"]); c2.j(b"\x75", "nsnk");
-    c2.l("snk");
-    c2.e(&[b"\x8b\x0d", &le(hero), b"\x85\xc9"]); c2.j(b"\x74", "nsnk");
-    c2.e(&[b"\xf6\x81\xf8\x00\x00\x00\x04"]); c2.j(b"\x74", "nsnk");
-    c2.e(&[b"\xb8\x01\x00\x00\x00\xc3"]);
-    c2.l("nsnk");
+    if o.sneak {
+        c2.e(&[b"\x83\xf8\x2e"]); c2.j(b"\x74", "snk");
+        c2.e(&[b"\x83\xf8\x4e"]); c2.j(b"\x75", "nsnk");
+        c2.l("snk");
+        c2.e(&[b"\x8b\x0d", &le(hero), b"\x85\xc9"]); c2.j(b"\x74", "nsnk");
+        c2.e(&[b"\xf6\x81\xf8\x00\x00\x00\x04"]); c2.j(b"\x74", "nsnk");
+        c2.e(&[b"\xb8\x01\x00\x00\x00\xc3"]);
+        c2.l("nsnk");
+    }
     c2.e(&[b"\x83\xf8\x2e"]); c2.jn(b"\x0f\x84", "o");
     c2.e(&[b"\x83\xf8\x02"]); c2.jn(b"\x0f\x84", "o"); // jump goes through at once, also from a sprint
     c2.e(&[b"\x83\xf8\x12"]); c2.j(b"\x75", "nb");
-    // right button without a weapon in hand: ignore it (it only stopped the hero)
-    c2.e(&[b"\x8b\x0d", &le(hero), b"\x85\xc9"]); c2.j(b"\x74", "armd");
-    c2.e(&[b"\xf6\x81\xf8\x00\x00\x00\x04"]); c2.j(b"\x75", "armd");
-    c2.e(&[b"\xb8\x01\x00\x00\x00\xc3"]);
-    c2.l("armd");
+    // right button without a weapon in hand: ignore it (it only stopped the hero; sneaking is on its own key)
+    if o.sneak {
+        c2.e(&[b"\x8b\x0d", &le(hero), b"\x85\xc9"]); c2.j(b"\x74", "armd");
+        c2.e(&[b"\xf6\x81\xf8\x00\x00\x00\x04"]); c2.j(b"\x75", "armd");
+        c2.e(&[b"\xb8\x01\x00\x00\x00\xc3"]);
+        c2.l("armd");
+    }
+    // instant block option off: right button goes the usual way
+    if !o.block { c2.j(b"\xeb", "nb"); }
     c2.e(&[b"\x8b\x0d", &le(hero), b"\x85\xc9"]); c2.j(b"\x74", "nb");
     c2.e(&[b"\x83\x3d", &le(bf18), b"\x01"]); c2.j(b"\x74", "bm");
     c2.e(&[b"\x83\xb9\x38\x01\x00\x00\x00"]); c2.j(b"\x74", "nb");
@@ -648,6 +654,7 @@ fn input(d: &mut Vec<u8>, secva: u32, secraw: usize, tick: Option<u32>, o: &BinO
     m.e(&[b"\x85\xc0"]); m.jn(b"\x0f\x85", "d0");
     m.e(&[b"\x60"]);
     if let Some(t) = tick { m.e(&[b"\xe8"]); m.rel(t); }
+    if !o.sprint { m.jn(b"\xe9", "out"); }
     m.e(&[b"\x31\xd2"]);
     m.e(&[b"\x83\x3d", &le(be98), b"\x00"]); m.j(b"\x75", "spr");
     m.e(&[b"\xa1", &le(hero), b"\x85\xc0"]); m.j(b"\x74", "nspr");
@@ -700,8 +707,10 @@ fn input(d: &mut Vec<u8>, secva: u32, secraw: usize, tick: Option<u32>, o: &BinO
     k.l("oth"); k.e(&[b"\xe9"]); k.rel(k_other);
     let kb = k.done()?; if kb.len() > 0x40 { return Err("kick size".into()); }
     blob[0xcc0..0xcc0 + kb.len()].copy_from_slice(&kb);
-    d[ko] = 0xe9; d[ko + 1..ko + 5].copy_from_slice(&rel32(ko_va + 5, secva + 0xcc0));
-    for i in 5..8 { d[ko + i] = 0x90; }
+    if o.block {
+        d[ko] = 0xe9; d[ko + 1..ko + 5].copy_from_slice(&rel32(ko_va + 5, secva + 0xcc0));
+        for i in 5..8 { d[ko + i] = 0x90; }
+    }
 
     // write section + redirect game code
     d[secraw..secraw + 0x1000].copy_from_slice(&blob);
@@ -709,21 +718,30 @@ fn input(d: &mut Vec<u8>, secva: u32, secraw: usize, tick: Option<u32>, o: &BinO
         d[o] = 0xe9; d[o + 1..o + 5].copy_from_slice(&rel32(from_va + 5, to));
         for k in 5..len { d[o + k] = 0x90; }
     };
+    // mouse hook always: it also drives the quick-load key
     jmp(d, sa_o, sa_va, secva + 0xb00, 5);
-    jmp(d, sb_o, sb_va, secva + 0xc80, 6);
-    jmp(d, mv_o, mv_va, secva + 0x900, 6);
-    jmp(d, issue_o, issue, secva + 0xd00, 8);
-    jmp(d, disp_o, disp_va, secva + 0x800, 6);
-    jmp(d, hook_o, hook_va, secva, 6);
-    for (site, to) in [(sprint_rel_o, secva + 0x400), (sneak_rel_o, secva + 0x410), (sneak_auto_o, secva + 0x410)] {
+    // each control option changes only its own part of the game controls
+    if o.sprint || o.sneak || o.block {
+        jmp(d, sb_o, sb_va, secva + 0xc80, 6);
+        jmp(d, issue_o, issue, secva + 0xd00, 8);
+        jmp(d, disp_o, disp_va, secva + 0x800, 6);
+        jmp(d, hook_o, hook_va, secva, 6);
+    }
+    if o.block { jmp(d, mv_o, mv_va, secva + 0x900, 6); }
+    let mut rel_sites = vec![];
+    if o.sprint { rel_sites.push((sprint_rel_o, secva + 0x400)); }
+    if o.sneak { rel_sites.push((sneak_rel_o, secva + 0x410)); rel_sites.push((sneak_auto_o, secva + 0x410)); }
+    for (site, to) in rel_sites {
         let cva = p.o2v(site + 2);
         d[site + 3..site + 7].copy_from_slice(&rel32(cva + 5, to));
     }
-    // RMB outside combat: nothing (sneak is on its own key); RMB in combat: block
-    d[rmb_o] = 0xeb; d[rmb_o + 1] = (rz - (rmb_o + 2)) as u8;
-    d[combat] = 0xeb; d[combat + 1] = (ctail - (combat + 2)) as u8;
-    // block while moving stays a block
-    d[blk + 7..blk + 9].copy_from_slice(&[0x90, 0x90]);
-    d[blk + 18..blk + 20].copy_from_slice(&[0x90, 0x90]);
+    // RMB outside combat: nothing (sneak is on its own key)
+    if o.sneak { d[rmb_o] = 0xeb; d[rmb_o + 1] = (rz - (rmb_o + 2)) as u8; }
+    if o.block {
+        // RMB in combat: block; block while moving stays a block
+        d[combat] = 0xeb; d[combat + 1] = (ctail - (combat + 2)) as u8;
+        d[blk + 7..blk + 9].copy_from_slice(&[0x90, 0x90]);
+        d[blk + 18..blk + 20].copy_from_slice(&[0x90, 0x90]);
+    }
     Ok(())
 }

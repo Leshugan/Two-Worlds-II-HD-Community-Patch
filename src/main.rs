@@ -73,7 +73,7 @@ fn handle(msg: &str, p: &EventLoopProxy<Ev>) {
 // Developer self-test: TW2_Community_Patch.exe --patch <in.exe> <out.exe>
 fn selftest(a: &[String]) {
     let mut d = std::fs::read(&a[2]).unwrap();
-    let o = patches::BinOpts { input: true, saves: true, quickload: true, noblur: true, borderless: true, laa: true, far_draw: true, far_grass: true, wpnfast: true, instant: true,
+    let o = patches::BinOpts { input: true, sprint: true, sneak: true, block: true, saves: true, quickload: true, noblur: true, borderless: true, laa: true, far_draw: true, far_grass: true, wpnfast: true, instant: true,
         sprint_mode: 1, sneak_mode: 2, sprint_vk: 0x10, sneak_vk: 0x43, ql_vk: 0x75 };
     let r = patches::apply(&mut d, &o);
     std::fs::write(&a[3], &d).unwrap();
@@ -83,13 +83,18 @@ fn selftest(a: &[String]) {
 fn main() {
     let a: Vec<String> = std::env::args().collect();
     if a.len() == 4 && a[1] == "--patch" { selftest(&a); return; }
-    if a.len() == 4 && (a[1] == "--install" || a[1] == "--uninstall") {
+    if (a.len() == 4 || a.len() == 5) && (a[1] == "--install" || a[1] == "--uninstall") {
         // developer test: --install <game dir> <log file>  (all default options)
         let lines = std::cell::RefCell::new(String::new());
         let log = |t: &str, c: &str| { lines.borrow_mut().push_str(&format!("[{c}] {t}\n")); };
         let o = install::Opts { v: json!({"sprint":true,"sneak":true,"quickload":true,"block":true,"camera":true,"dxvk":true,"draw":true,
             "horizon":true,"lodtrees":true,"noblur":true,"saves":true,"noloot":false,"instant":true,"wpnfast":true,"shadows":true,"grass":true,"fov":true,"intro":true,"borderless":true,"laa":true,"voices":true,"steamblock":true,
             "sprint_key":16,"sneak_key":67,"quickload_key":117,"sprint_mode":1,"sneak_mode":2,"draw_level":10,"grass_level":3}) };
+        // optional 5th argument: a JSON file with the options (as the window sends them)
+        let o = match a.get(4).and_then(|f| std::fs::read(f).ok()).and_then(|d| serde_json::from_slice::<Value>(&d).ok()) {
+            Some(v) => install::Opts { v },
+            None => o,
+        };
         let g = PathBuf::from(&a[2]);
         let r = if a[1] == "--install" { install::install(&g, &o, &log) } else { install::uninstall(&g, &log) };
         let mut s = lines.into_inner();
